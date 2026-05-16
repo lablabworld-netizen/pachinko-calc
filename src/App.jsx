@@ -1,0 +1,431 @@
+import { useState, useEffect, useRef } from "react";
+
+// ── 計算ユーティリティ ──────────────────────────
+function calcHitProb(spins, rate) {
+  return 1 - Math.pow(1 - 1 / rate, spins);
+}
+function spinsNeededForProb(prob, rate) {
+  return Math.ceil(Math.log(1 - prob) / Math.log(1 - 1 / rate));
+}
+function moneyNeeded(spins, spinsPer1000) {
+  return Math.ceil((spins / spinsPer1000) * 1000);
+}
+
+const PROB_LEVELS = [
+  { prob: 0.3,  label: "30%",      color: "#44aaff" },
+  { prob: 0.5,  label: "50%",      color: "#44ddaa" },
+  { prob: 0.63, label: "63%（等倍）", color: "#ffcc00" },
+  { prob: 0.8,  label: "80%",      color: "#ff8800" },
+  { prob: 0.9,  label: "90%",      color: "#ff5500" },
+  { prob: 0.95, label: "95%",      color: "#ff3333" },
+  { prob: 0.99, label: "99%",      color: "#ff0055" },
+];
+
+// ── 共通コンポーネント ──────────────────────────
+function Header({ page, setPage }) {
+  return (
+    <div style={{
+      background: "linear-gradient(180deg,#0f0f20 0%,#07070f 100%)",
+      borderBottom: "1px solid #ffffff0a",
+      padding: "14px 20px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      position: "sticky", top: 0, zIndex: 100,
+    }}>
+      <div>
+        <div style={{ fontFamily:"'Zen Dots',monospace", fontSize:16, letterSpacing:3, color:"#fff", textShadow:"0 0 20px #ff444488" }}>
+          🎰 PACHINKO CALC
+        </div>
+        <div style={{ fontSize:9, color:"#ffffff33", letterSpacing:4 }}>確率シミュレーター</div>
+      </div>
+      <button
+        onClick={() => setPage(page === "calc" ? "guide" : "calc")}
+        style={{
+          background: page === "guide" ? "#ff444422" : "#ffffff11",
+          border: `1px solid ${page === "guide" ? "#ff444444" : "#ffffff22"}`,
+          color: page === "guide" ? "#ff8888" : "#ffffff88",
+          borderRadius: 10, padding: "6px 14px", fontSize: 12,
+          cursor: "pointer", fontFamily:"'Noto Sans JP',sans-serif",
+        }}
+      >
+        {page === "calc" ? "使い方ガイド →" : "← 計算ツール"}
+      </button>
+    </div>
+  );
+}
+
+function AnimatedNumber({ value, duration = 600 }) {
+  const [display, setDisplay] = useState(value);
+  const start = useRef(value);
+  const raf = useRef(null);
+  useEffect(() => {
+    const from = start.current, to = value;
+    const startTime = performance.now();
+    const animate = (now) => {
+      const t = Math.min(1, (now - startTime) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplay(Math.round(from + (to - from) * eased));
+      if (t < 1) raf.current = requestAnimationFrame(animate);
+      else start.current = to;
+    };
+    raf.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(raf.current);
+  }, [value]);
+  return <>{display.toLocaleString()}</>;
+}
+
+function GaugeArc({ prob }) {
+  const r=80, cx=110, cy=100, startAngle=-210, endAngle=30;
+  const fillDeg = (endAngle - startAngle) * prob;
+  const toRad = (d) => d * Math.PI / 180;
+  const arcPath = (from, to) => {
+    const x1=cx+r*Math.cos(toRad(from)), y1=cy+r*Math.sin(toRad(from));
+    const x2=cx+r*Math.cos(toRad(to)),   y2=cy+r*Math.sin(toRad(to));
+    return `M ${x1} ${y1} A ${r} ${r} 0 ${to-from>180?1:0} 1 ${x2} ${y2}`;
+  };
+  const needleAngle = startAngle + fillDeg;
+  const nx=cx+(r-12)*Math.cos(toRad(needleAngle)), ny=cy+(r-12)*Math.sin(toRad(needleAngle));
+  const pct = Math.round(prob*100);
+  const color = pct>=90?"#ff2244":pct>=70?"#ff6600":pct>=50?"#ffcc00":pct>=30?"#44ddaa":"#44aaff";
+  return (
+    <svg width="220" height="130" style={{ overflow:"visible" }}>
+      <path d={arcPath(startAngle,endAngle)} fill="none" stroke="#ffffff0f" strokeWidth={14} strokeLinecap="round"/>
+      <path d={arcPath(startAngle,startAngle+fillDeg)} fill="none" stroke={color} strokeWidth={14} strokeLinecap="round"
+        style={{ filter:`drop-shadow(0 0 6px ${color})`, transition:"all 0.6s cubic-bezier(.4,0,.2,1)" }}/>
+      <circle cx={nx} cy={ny} r={6} fill={color}
+        style={{ filter:`drop-shadow(0 0 8px ${color})`, transition:"all 0.6s cubic-bezier(.4,0,.2,1)" }}/>
+      <text x={cx} y={cy+8} textAnchor="middle" fill={color} fontSize={32}
+        fontFamily="'Zen Dots',monospace" fontWeight="bold" style={{ filter:`drop-shadow(0 0 8px ${color})` }}>
+        {pct}%
+      </text>
+      <text x={cx} y={cy+26} textAnchor="middle" fill="#ffffff44" fontSize={10} fontFamily="'Noto Sans JP',sans-serif">
+        当選確率
+      </text>
+    </svg>
+  );
+}
+
+function StepBtn({ label, onClick, color }) {
+  const [pressed, setPressed] = useState(false);
+  return (
+    <button
+      onPointerDown={()=>setPressed(true)} onPointerUp={()=>setPressed(false)} onPointerLeave={()=>setPressed(false)}
+      onClick={onClick}
+      style={{
+        width:36, height:36, borderRadius:10, border:`1px solid ${color}44`,
+        background: pressed ? color+"33" : color+"11", color, fontSize:20, fontWeight:700,
+        cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center",
+        flexShrink:0, transition:"background 0.1s", lineHeight:1, userSelect:"none",
+      }}
+    >{label}</button>
+  );
+}
+
+function Slider({ label, value, min, max, step=1, onChange, unit, color="#ff4444", showStepper=false }) {
+  return (
+    <div style={{ marginBottom:20 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+        <span style={{ fontSize:12, color:"#ffffff77" }}>{label}</span>
+        <span style={{ fontFamily:"'Zen Dots',monospace", fontSize:16, color }}>
+          {value.toLocaleString()}<span style={{ fontSize:11, color:"#ffffff55", marginLeft:2 }}>{unit}</span>
+        </span>
+      </div>
+      {showStepper && (
+        <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
+          <StepBtn label="－" color={color} onClick={()=>onChange(Math.max(min,value-step))}/>
+          <div style={{ flex:1, textAlign:"center" }}>
+            <span style={{ fontFamily:"'Zen Dots',monospace", fontSize:22, color, textShadow:`0 0 10px ${color}88` }}>
+              {value.toLocaleString()}
+            </span>
+            <span style={{ fontSize:11, color:"#ffffff44", marginLeft:4 }}>{unit}</span>
+          </div>
+          <StepBtn label="＋" color={color} onClick={()=>onChange(Math.min(max,value+step))}/>
+        </div>
+      )}
+      <div style={{ position:"relative", height:32, display:"flex", alignItems:"center" }}>
+        <div style={{ position:"absolute", left:0, right:0, height:6, background:"#ffffff0f", borderRadius:99 }}/>
+        <div style={{
+          position:"absolute", left:0, width:`${((value-min)/(max-min))*100}%`, height:6,
+          background:`linear-gradient(90deg,${color}66,${color})`, borderRadius:99,
+          boxShadow:`0 0 8px ${color}88`, transition:"width 0.1s",
+        }}/>
+        <input type="range" min={min} max={max} step={step} value={value}
+          onChange={(e)=>onChange(Number(e.target.value))}
+          style={{ position:"absolute", width:"100%", opacity:0, height:32, cursor:"pointer", margin:0 }}/>
+      </div>
+      <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#ffffff22", marginTop:2 }}>
+        <span>{min.toLocaleString()}</span><span>{max.toLocaleString()}</span>
+      </div>
+    </div>
+  );
+}
+
+// ── 計算ツールページ ────────────────────────────
+function CalcPage({ setPage }) {
+  const [rate, setRate] = useState(399);
+  const [spinsPer1000, setSpinsPer1000] = useState(20);
+  const [budget, setBudget] = useState(5000);
+  const spins = Math.floor((budget/1000)*spinsPer1000);
+  const prob = calcHitProb(spins, rate);
+
+  return (
+    <div style={{ maxWidth:480, margin:"0 auto", padding:"0 20px" }}>
+      {/* Gauge */}
+      <div style={{
+        margin:"20px 0 0", background:"linear-gradient(135deg,#0f0f22,#12121e)",
+        border:"1px solid #ffffff0f", borderRadius:20, padding:"20px 20px 12px",
+        display:"flex", flexDirection:"column", alignItems:"center",
+      }}>
+        <GaugeArc prob={prob}/>
+        <div style={{ display:"flex", gap:16, marginTop:4, fontSize:12, color:"#ffffff55",
+          borderTop:"1px solid #ffffff0a", paddingTop:12, width:"100%", justifyContent:"center" }}>
+          <span><b style={{ color:"#fff", fontFamily:"'Zen Dots',monospace" }}><AnimatedNumber value={spins}/></b> 回転</span>
+          <span style={{ color:"#ffffff22" }}>·</span>
+          <span>予算 <b style={{ color:"#fff", fontFamily:"'Zen Dots',monospace" }}><AnimatedNumber value={budget}/></b> 円</span>
+        </div>
+      </div>
+
+      {/* Sliders */}
+      <div style={{ margin:"14px 0", background:"#0f0f22", border:"1px solid #ffffff0f", borderRadius:20, padding:"20px" }}>
+        <Slider label="大当り確率の分母" value={rate} min={99} max={799} step={1}
+          onChange={setRate} unit="分の1" color="#44aaff" showStepper/>
+        <Slider label="1000円あたりの回転数" value={spinsPer1000} min={10} max={40} step={1}
+          onChange={setSpinsPer1000} unit="回転" color="#44ddaa" showStepper/>
+        <Slider label="予算" value={budget} min={500} max={50000} step={500}
+          onChange={setBudget} unit="円" color="#ff8800" showStepper/>
+      </div>
+
+      {/* 確率テーブル */}
+      <div style={{ background:"#0f0f22", border:"1px solid #ffffff0f", borderRadius:20, padding:"16px 20px", marginBottom:14 }}>
+        <div style={{ fontSize:11, color:"#ffffff44", letterSpacing:2, marginBottom:12 }}>
+          各確率に必要な金額（1000円 {spinsPer1000}回転の場合）
+        </div>
+        {PROB_LEVELS.map(({ prob:p, label, color }) => {
+          const s = spinsNeededForProb(p, rate);
+          const m = moneyNeeded(s, spinsPer1000);
+          const isCurrent = budget >= m;
+          return (
+            <div key={label} style={{
+              display:"flex", alignItems:"center", justifyContent:"space-between",
+              padding:"9px 10px", borderRadius:10, marginBottom:4,
+              background: isCurrent ? color+"12" : "transparent",
+              border: isCurrent ? `1px solid ${color}33` : "1px solid transparent",
+              transition:"all 0.3s",
+            }}>
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <div style={{ width:8, height:8, borderRadius:"50%", background:color, boxShadow:`0 0 6px ${color}` }}/>
+                <span style={{ fontSize:12, color: isCurrent ? color : "#ffffff55" }}>{label}</span>
+              </div>
+              <div style={{ textAlign:"right" }}>
+                <span style={{ fontFamily:"'Zen Dots',monospace", fontSize:15, color: isCurrent ? color : "#ffffff44" }}>
+                  {m.toLocaleString()}円
+                </span>
+                <span style={{ fontSize:10, color:"#ffffff33", marginLeft:6 }}>({s.toLocaleString()}回転)</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* インサイト */}
+      <div style={{
+        background:"linear-gradient(135deg,#1a0808,#1a1008)",
+        border:"1px solid #ff440022", borderRadius:16, padding:"14px 16px",
+        fontSize:13, color:"#ffffff88", lineHeight:1.7,
+      }}>
+        {(() => {
+          const pct = Math.round(prob*100);
+          const moneyFor63 = moneyNeeded(spinsNeededForProb(0.63,rate), spinsPer1000);
+          if (pct>=80) return <>
+            <span style={{ color:"#ff4444" }}>⚡ 予算内でかなり有利です。</span><br/>
+            {rate}分の1の台を{spinsPer1000}回転/1000円で回せるなら、{budget.toLocaleString()}円で当たる確率は<b style={{ color:"#ff4444" }}>{pct}%</b>あります。
+          </>;
+          if (pct>=50) return <>
+            <span style={{ color:"#ffcc00" }}>📊 五分五分より有利です。</span><br/>
+            63%（等倍）まで持っていくにはあと <b style={{ color:"#ffcc00" }}>{Math.max(0,moneyFor63-budget).toLocaleString()}円</b> 必要です。
+          </>;
+          return <>
+            <span style={{ color:"#44aaff" }}>💡 まだ序盤です。</span><br/>
+            50%を超えるには <b style={{ color:"#44aaff" }}>{Math.max(0,moneyNeeded(spinsNeededForProb(0.5,rate),spinsPer1000)-budget).toLocaleString()}円</b>、
+            63%には <b style={{ color:"#ffcc00" }}>{Math.max(0,moneyFor63-budget).toLocaleString()}円</b> あと必要です。
+          </>;
+        })()}
+      </div>
+
+      <div style={{ marginTop:12, textAlign:"center" }}>
+        <button onClick={()=>setPage("guide")} style={{
+          background:"none", border:"none", color:"#ffffff33", fontSize:12,
+          cursor:"pointer", textDecoration:"underline", padding:"8px 0",
+        }}>使い方・確率の説明を読む</button>
+      </div>
+
+      <div style={{ marginTop:8, fontSize:10, color:"#ffffff22", textAlign:"center", lineHeight:1.8, paddingBottom:40 }}>
+        ※ 確率は独立試行のため、過去の回転数は結果に影響しません。<br/>
+        このツールは期待値の理解を目的としています。
+      </div>
+    </div>
+  );
+}
+
+// ── ガイドページ ────────────────────────────────
+function GuidePage({ setPage }) {
+  return (
+    <div style={{ maxWidth:480, margin:"0 auto", padding:"20px 20px 0" }}>
+      <div style={{ marginBottom:20 }}>
+        <h1 style={{ fontSize:20, fontWeight:900, margin:"0 0 8px", color:"#fff" }}>
+          パチンコ確率シミュレーターとは
+        </h1>
+        <p style={{ color:"#ffffff88", fontSize:14, lineHeight:1.8, margin:0 }}>
+          「予算〇〇円で当たる確率は？」「この台は得か損か？」をその場で計算できるツールです。感覚じゃなく数字で台を判断できるようになります。
+        </p>
+      </div>
+
+      {[
+        {
+          tag:"基本のき", tagColor:"#44aaff",
+          title:"パチンコの当たりは「毎回独立」",
+          body:"1/399の台なら、1回転ごとに399分の1の抽選が行われます。前の回転の結果は次に一切影響しません。コインを投げるのと同じで、100回表が続いても次の確率はやっぱり1/2です。",
+          note:{ color:"#44aaff", text:"💡 「ハマってるから当たりやすい」は数学的には正しくありません。ただし釘の良い台を選ぶことは意味があります。" },
+        },
+      ].map(({ tag, tagColor, title, body, note }) => (
+        <Card key={title} tag={tag} tagColor={tagColor} title={title}>
+          <p style={{ color:"#ffffff77", fontSize:13, lineHeight:1.8, margin:"0 0 10px" }}>{body}</p>
+          {note && (
+            <div style={{ background:note.color+"11", border:`1px solid ${note.color}22`, borderRadius:10, padding:"10px 14px", fontSize:13, color:note.color+"cc" }}>
+              {note.text}
+            </div>
+          )}
+        </Card>
+      ))}
+
+      <Card tag="使い方" tagColor="#44ddaa" title="3つの数字を入れるだけ">
+        {[
+          { label:"大当り確率の分母", desc:"台の液晶や島の看板に書いてある数字。1/319なら319、1/399なら399。", color:"#44aaff" },
+          { label:"1000円あたりの回転数", desc:"釘の良し悪しを表す数字。ホール内のデータカウンターや「データロボサイトセブン」などのパチンコデータアプリで確認できます。平均は18〜22回転が多い。", color:"#44ddaa" },
+          { label:"予算", desc:"今日使える金額を入れるだけ。500円刻みで調整できます。", color:"#ff8800" },
+        ].map((item) => (
+          <div key={item.label} style={{ display:"flex", gap:12, marginBottom:14 }}>
+            <div style={{ width:4, borderRadius:99, background:item.color, flexShrink:0, boxShadow:`0 0 8px ${item.color}` }}/>
+            <div>
+              <div style={{ fontSize:13, fontWeight:700, color:item.color, marginBottom:4 }}>{item.label}</div>
+              <div style={{ fontSize:12, color:"#ffffff66", lineHeight:1.7 }}>{item.desc}</div>
+            </div>
+          </div>
+        ))}
+      </Card>
+
+      <Card tag="読み方" tagColor="#ffcc00" title="確率の表の見方">
+        <p style={{ color:"#ffffff77", fontSize:13, margin:"0 0 10px" }}>
+          下の表は「この金額まで使えば何%の確率で当たっているか」を示しています。
+        </p>
+        <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+          <thead>
+            <tr>
+              <th style={{ textAlign:"left", color:"#ffffff44", fontWeight:400, padding:"6px 8px", borderBottom:"1px solid #ffffff0f", fontSize:11 }}>確率</th>
+              <th style={{ textAlign:"left", color:"#ffffff44", fontWeight:400, padding:"6px 8px", borderBottom:"1px solid #ffffff0f", fontSize:11 }}>意味</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              { prob:"30%",   mean:"3回に1回しか当たらない序盤",       color:"#44aaff" },
+              { prob:"50%",   mean:"五分五分。ここが損益分岐点の目安", color:"#44ddaa" },
+              { prob:"63%",   mean:"確率通りに1回当たる金額（等倍）", color:"#ffcc00" },
+              { prob:"80%",   mean:"5回に4回は当たる水準",             color:"#ff8800" },
+              { prob:"95%〜", mean:"ほぼ当たるが費用が大きい",         color:"#ff4444" },
+            ].map((row) => (
+              <tr key={row.prob}>
+                <td style={{ padding:"8px 8px", borderBottom:"1px solid #ffffff08", color:row.color, fontFamily:"'Zen Dots',monospace", fontWeight:700 }}>{row.prob}</td>
+                <td style={{ padding:"8px 8px", borderBottom:"1px solid #ffffff08", color:"#ccc", fontSize:12 }}>{row.mean}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+
+      <Card tag="釘読み" tagColor="#ff8800" title="回転数が一番重要な理由">
+        <p style={{ color:"#ffffff77", fontSize:13, margin:"0 0 10px" }}>
+          同じ1/399の台でも、回転数が違うと必要な金額が大きく変わります。
+        </p>
+        <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+          <thead>
+            <tr>
+              {["1000円の回転数","50%に必要な金額","評価"].map(h=>(
+                <th key={h} style={{ textAlign:"left", color:"#ffffff44", fontWeight:400, padding:"6px 8px", borderBottom:"1px solid #ffffff0f", fontSize:11 }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              { spin:"15回転", money:"約18,500円", eval:"❌ 悪い",  color:"#ff4444" },
+              { spin:"18回転", money:"約15,400円", eval:"△ 普通",  color:"#ffcc00" },
+              { spin:"22回転", money:"約12,600円", eval:"○ 良い",  color:"#44ddaa" },
+              { spin:"25回転", money:"約11,100円", eval:"◎ 優良",  color:"#44aaff" },
+            ].map((row) => (
+              <tr key={row.spin}>
+                <td style={{ padding:"8px 8px", borderBottom:"1px solid #ffffff08", color:"#ccc", fontFamily:"'Zen Dots',monospace", fontSize:12 }}>{row.spin}</td>
+                <td style={{ padding:"8px 8px", borderBottom:"1px solid #ffffff08", color:"#ccc", fontSize:12 }}>{row.money}</td>
+                <td style={{ padding:"8px 8px", borderBottom:"1px solid #ffffff08", color:row.color, fontWeight:700, fontSize:12 }}>{row.eval}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p style={{ color:"#ffffff33", fontSize:11, marginTop:10, marginBottom:0 }}>※ 1/399・予算5万円の場合で計算</p>
+      </Card>
+
+      <Card tag="注意" tagColor="#ff4444" title="このツールでできないこと">
+        {["次の回転が当たるかどうかの予測","ハマり台が「そろそろ当たる」の保証","収支をプラスにする方法の提供"].map(text=>(
+          <div key={text} style={{ display:"flex", gap:8, alignItems:"flex-start", marginBottom:8 }}>
+            <span style={{ color:"#ff4444", flexShrink:0 }}>✕</span>
+            <span style={{ fontSize:13, color:"#ffffff66" }}>{text}</span>
+          </div>
+        ))}
+        <div style={{ marginTop:12, background:"#ff444411", border:"1px solid #ff444422", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#ff4444aa", lineHeight:1.7 }}>
+          パチンコは長期的にホール側が有利な構造になっています。このツールは期待値の理解と予算管理を目的としています。無理のない範囲で楽しみましょう。
+        </div>
+      </Card>
+
+      <div style={{ textAlign:"center", padding:"20px 0" }}>
+        <button onClick={()=>setPage("calc")} style={{
+          display:"inline-block", background:"linear-gradient(135deg,#ff4444,#ff8800)",
+          color:"#fff", fontWeight:700, fontSize:15, padding:"14px 40px", borderRadius:14,
+          border:"none", cursor:"pointer", boxShadow:"0 4px 20px #ff444444",
+        }}>
+          🎰 計算ツールを使う
+        </button>
+      </div>
+
+      <div style={{ fontSize:10, color:"#ffffff1a", textAlign:"center", lineHeight:1.8, paddingBottom:40 }}>
+        当サイトはパチンコの確率計算を目的とした情報提供サービスです。<br/>
+        ギャンブル依存症に関する相談は「ギャンブル等依存症相談窓口」をご利用ください。
+      </div>
+    </div>
+  );
+}
+
+function Card({ tag, tagColor, title, children }) {
+  return (
+    <div style={{ background:"#0f0f22", border:"1px solid #ffffff0f", borderRadius:16, padding:20, marginBottom:14 }}>
+      <div style={{ display:"inline-block", fontSize:10, padding:"2px 10px", borderRadius:99, fontWeight:700,
+        letterSpacing:1, marginBottom:10, background:tagColor+"22", color:tagColor, border:`1px solid ${tagColor}33` }}>
+        {tag}
+      </div>
+      <h2 style={{ fontSize:16, color:"#fff", margin:"0 0 12px" }}>{title}</h2>
+      {children}
+    </div>
+  );
+}
+
+// ── メインApp ───────────────────────────────────
+export default function App() {
+  const [page, setPage] = useState("calc");
+
+  return (
+    <div style={{ minHeight:"100vh", background:"#07070f", color:"#e8e8f0", fontFamily:"'Noto Sans JP',sans-serif", paddingBottom:60 }}>
+      <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Dots&display=swap" rel="stylesheet"/>
+      <style>{`input[type=range]{-webkit-appearance:none;appearance:none}*{box-sizing:border-box}`}</style>
+      <Header page={page} setPage={setPage}/>
+      {page === "calc" ? <CalcPage setPage={setPage}/> : <GuidePage setPage={setPage}/>}
+    </div>
+  );
+}
