@@ -232,10 +232,10 @@ function CalcPage({ setPage }) {
 
       {/* 広告 */}
       <div style={{ textAlign:"center", margin:"8px 0" }}>
-        <a href="https://px.a8.net/svt/ejp?a8mat=4B3U71+GHL8G2+2SY6+BX3J5" rel="nofollow">
-          <img border="0" width="468" height="60" alt="" src="https://www27.a8.net/svt/bgt?aid=260519581997&wid=003&eno=01&mid=s00000013083002002000&mc=1"/>
+        <a href="https://px.a8.net/svt/ejp?a8mat=4B3U71+GHL8G2+2SY6+BXQOH" rel="nofollow">
+          <img border="0" width="234" height="60" alt="" src="https://www21.a8.net/svt/bgt?aid=260519581997&wid=003&eno=01&mid=s00000013083002005000&mc=1"/>
         </a>
-        <img border="0" width="1" height="1" src="https://www16.a8.net/0.gif?a8mat=4B3U71+GHL8G2+2SY6+BX3J5" alt=""/>
+        <img border="0" width="1" height="1" src="https://www13.a8.net/0.gif?a8mat=4B3U71+GHL8G2+2SY6+BXQOH" alt=""/>
       </div>
 
       {/* オプション展開ボタン */}
