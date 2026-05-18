@@ -33,7 +33,7 @@ function Header({ page, setPage }) {
       justifyContent: "space-between",
       position: "sticky", top: 0, zIndex: 100,
     }}>
-      <div style={{ cursor: "pointer" }} onClick={() => setPage("calc")}>
+      <div style={{ cursor:"pointer" }} onClick={() => setPage("calc")}>
         <div style={{ fontFamily:"'Zen Dots',monospace", fontSize:16, letterSpacing:3, color:"#fff", textShadow:"0 0 20px #ff444488" }}>
           🎰 PACHINKO CALC
         </div>
@@ -77,7 +77,7 @@ function AnimatedNumber({ value, duration = 600 }) {
 
 function GaugeArc({ prob }) {
   const r=80, cx=110, cy=100, startAngle=-210, endAngle=30;
-  const fillDeg = (endAngle - startAngle) * prob;
+  const fillDeg = (endAngle - startAngle) * Math.min(prob, 1);
   const toRad = (d) => d * Math.PI / 180;
   const arcPath = (from, to) => {
     const x1=cx+r*Math.cos(toRad(from)), y1=cy+r*Math.sin(toRad(from));
@@ -103,6 +103,32 @@ function GaugeArc({ prob }) {
         当選確率
       </text>
     </svg>
+  );
+}
+
+function SmallGauge({ prob, label, color }) {
+  const r=44, cx=60, cy=56, startAngle=-210, endAngle=30;
+  const fillDeg = (endAngle - startAngle) * Math.min(prob, 1);
+  const toRad = (d) => d * Math.PI / 180;
+  const arcPath = (from, to) => {
+    const x1=cx+r*Math.cos(toRad(from)), y1=cy+r*Math.sin(toRad(from));
+    const x2=cx+r*Math.cos(toRad(to)),   y2=cy+r*Math.sin(toRad(to));
+    return `M ${x1} ${y1} A ${r} ${r} 0 ${to-from>180?1:0} 1 ${x2} ${y2}`;
+  };
+  const pct = Math.round(prob*100);
+  return (
+    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", flex:1 }}>
+      <svg width="120" height="74" style={{ overflow:"visible" }}>
+        <path d={arcPath(startAngle,endAngle)} fill="none" stroke="#ffffff0f" strokeWidth={8} strokeLinecap="round"/>
+        <path d={arcPath(startAngle,startAngle+fillDeg)} fill="none" stroke={color} strokeWidth={8} strokeLinecap="round"
+          style={{ filter:`drop-shadow(0 0 4px ${color})`, transition:"all 0.6s cubic-bezier(.4,0,.2,1)" }}/>
+        <text x={cx} y={cy+4} textAnchor="middle" fill={color} fontSize={20}
+          fontFamily="'Zen Dots',monospace" fontWeight="bold">
+          {pct}%
+        </text>
+      </svg>
+      <div style={{ fontSize:11, color:"#ffffff44", marginTop:-2, textAlign:"center" }}>{label}</div>
+    </div>
   );
 }
 
@@ -166,8 +192,12 @@ function CalcPage({ setPage }) {
   const [rate, setRate] = useState(399);
   const [spinsPer1000, setSpinsPer1000] = useState(20);
   const [budget, setBudget] = useState(5000);
+  const [showOption, setShowOption] = useState(false);
+  const [rushEntryRate, setRushEntryRate] = useState(60);
+
   const spins = Math.floor((budget/1000)*spinsPer1000);
   const prob = calcHitProb(spins, rate);
+  const rushProb = prob * (rushEntryRate / 100);
 
   return (
     <div style={{ maxWidth:480, margin:"0 auto", padding:"0 20px" }}>
@@ -177,17 +207,64 @@ function CalcPage({ setPage }) {
         border:"1px solid #ffffff0f", borderRadius:20, padding:"20px 20px 12px",
         display:"flex", flexDirection:"column", alignItems:"center",
       }}>
-        <GaugeArc prob={prob}/>
-        <div style={{ display:"flex", gap:16, marginTop:4, fontSize:12, color:"#ffffff55",
-          borderTop:"1px solid #ffffff0a", paddingTop:12, width:"100%", justifyContent:"center" }}>
-          <span><b style={{ color:"#fff", fontFamily:"'Zen Dots',monospace" }}><AnimatedNumber value={spins}/></b> 回転</span>
-          <span style={{ color:"#ffffff22" }}>·</span>
-          <span>予算 <b style={{ color:"#fff", fontFamily:"'Zen Dots',monospace" }}><AnimatedNumber value={budget}/></b> 円</span>
-        </div>
+        {!showOption ? (
+          <>
+            <GaugeArc prob={prob}/>
+            <div style={{ display:"flex", gap:16, marginTop:4, fontSize:12, color:"#ffffff55",
+              borderTop:"1px solid #ffffff0a", paddingTop:12, width:"100%", justifyContent:"center" }}>
+              <span><b style={{ color:"#fff", fontFamily:"'Zen Dots',monospace" }}><AnimatedNumber value={spins}/></b> 回転</span>
+              <span style={{ color:"#ffffff22" }}>·</span>
+              <span>予算 <b style={{ color:"#fff", fontFamily:"'Zen Dots',monospace" }}><AnimatedNumber value={budget}/></b> 円</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ display:"flex", gap:16, justifyContent:"center", width:"100%" }}>
+              <SmallGauge prob={prob} label="初当たり確率" color="#44aaff"/>
+              <SmallGauge prob={rushProb} label="RUSH到達確率" color="#ff4444"/>
+            </div>
+            <div style={{ fontSize:11, color:"#ffffff33", marginTop:8, textAlign:"center" }}>
+              予算 {budget.toLocaleString()}円 / {spins.toLocaleString()}回転
+            </div>
+          </>
+        )}
       </div>
 
+      {/* 広告 */}
+      <div style={{ textAlign:"center", margin:"8px 0" }}>
+        <a href="https://px.a8.net/svt/ejp?a8mat=4B3U71+GHL8G2+2SY6+BX3J5" rel="nofollow">
+          <img border="0" width="468" height="60" alt="" src="https://www27.a8.net/svt/bgt?aid=260519581997&wid=003&eno=01&mid=s00000013083002002000&mc=1"/>
+        </a>
+        <img border="0" width="1" height="1" src="https://www16.a8.net/0.gif?a8mat=4B3U71+GHL8G2+2SY6+BX3J5" alt=""/>
+      </div>
+
+      {/* オプション展開ボタン */}
+      <button onClick={() => setShowOption(v => !v)} style={{
+        width:"100%", marginTop:8, padding:"9px 0", borderRadius:12, fontSize:12,
+        background: showOption ? "#ff444411" : "#ffffff08",
+        border: showOption ? "1px solid #ff444433" : "1px solid #ffffff11",
+        color: showOption ? "#ff8888aa" : "#ffffff33",
+        cursor:"pointer", fontFamily:"'Noto Sans JP',sans-serif",
+        transition:"all 0.2s",
+      }}>
+        {showOption ? "▲ RUSH突入率設定を閉じる" : "⚙️ RUSH突入率を設定する（上位当たり）"}
+      </button>
+
+      {/* オプション：RUSH突入率設定 */}
+      {showOption && (
+        <div style={{ background:"#0f0f22", border:"1px solid #ff444422", borderRadius:16, padding:"16px 20px", marginTop:4 }}>
+          <div style={{ fontSize:11, color:"#ff8888aa", letterSpacing:1, marginBottom:14 }}>RUSH突入率設定</div>
+          <Slider label="RUSH突入率（台のスペック表で確認）" value={rushEntryRate} min={1} max={100} step={1}
+            onChange={setRushEntryRate} unit="%" color="#ff4444" showStepper/>
+          <div style={{ fontSize:11, color:"#ffffff33", lineHeight:1.7 }}>
+            ※ 当たりの中でRUSHに入る割合です。<br/>
+            台のスペック表や「データロボサイトセブン」で確認できます。
+          </div>
+        </div>
+      )}
+
       {/* Sliders */}
-      <div style={{ margin:"14px 0", background:"#0f0f22", border:"1px solid #ffffff0f", borderRadius:20, padding:"20px" }}>
+      <div style={{ margin:"10px 0", background:"#0f0f22", border:"1px solid #ffffff0f", borderRadius:20, padding:"20px" }}>
         <Slider label="大当り確率の分母" value={rate} min={99} max={799} step={1}
           onChange={setRate} unit="分の1" color="#44aaff" showStepper/>
         <Slider label="1000円あたりの回転数" value={spinsPer1000} min={10} max={40} step={1}
@@ -409,89 +486,41 @@ function PrivacyPage({ setPage }) {
   const dateStr = `${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日`;
 
   const sections = [
-    {
-      title: "個人情報の収集について",
-      body: "当サイト（PACHINKO CALC）は、ユーザーが直接入力した情報（確率・回転数・予算）をサーバーに送信・保存することはありません。すべての計算はお使いのブラウザ上でのみ行われます。",
-    },
-    {
-      title: "アクセス解析ツールについて",
-      body: "当サイトでは、Googleによるアクセス解析ツール「Googleアナリティクス」を使用する場合があります。このGoogleアナリティクスはデータ収集のためにCookieを使用しています。このデータは匿名で収集されており、個人を特定するものではありません。この機能はCookieを無効にすることで収集を拒否できます。詳しくはGoogleのプライバシーポリシーをご確認ください。",
-    },
-    {
-      title: "広告について",
-      body: "当サイトは、第三者配信の広告サービス（Google AdSense）を利用する場合があります。広告配信事業者はCookieを使用して、ユーザーが過去にアクセスしたサイトの情報に基づいて広告を配信することがあります。GoogleがCookieを使用することにより、ユーザーがそのサイトや他のサイトにアクセスした際の情報に基づいて広告を配信することを、Googleの広告設定ページからオプトアウトできます。",
-    },
-    {
-      title: "免責事項",
-      body: "当サイトに掲載している計算結果・情報の正確性には万全を期しておりますが、その内容を保証するものではありません。当サイトの情報を利用して生じた損害について、一切の責任を負いかねます。また、パチンコは独立試行のため、当サイトの計算結果は将来の当選を保証するものではありません。パチンコ・パチスロは適度に楽しみ、のめり込まないようご注意ください。",
-    },
-    {
-      title: "著作権について",
-      body: "当サイトに掲載されているコンテンツ（テキスト・デザイン・プログラム等）の著作権は当サイト管理者に帰属します。無断転載・複製はご遠慮ください。",
-    },
-    {
-      title: "プライバシーポリシーの変更",
-      body: "当サイトは、必要に応じて本プライバシーポリシーを変更することがあります。変更後のプライバシーポリシーは当ページに掲示された時点より効力を生じるものとします。",
-    },
+    { title:"個人情報の収集について", body:"当サイト（PACHINKO CALC）は、ユーザーが直接入力した情報（確率・回転数・予算）をサーバーに送信・保存することはありません。すべての計算はお使いのブラウザ上でのみ行われます。" },
+    { title:"アクセス解析ツールについて", body:"当サイトでは、Googleによるアクセス解析ツール「Googleアナリティクス」を使用する場合があります。このGoogleアナリティクスはデータ収集のためにCookieを使用しています。このデータは匿名で収集されており、個人を特定するものではありません。この機能はCookieを無効にすることで収集を拒否できます。詳しくはGoogleのプライバシーポリシーをご確認ください。" },
+    { title:"広告について", body:"当サイトは、第三者配信の広告サービス（Google AdSense）を利用する場合があります。広告配信事業者はCookieを使用して、ユーザーが過去にアクセスしたサイトの情報に基づいて広告を配信することがあります。GoogleがCookieを使用することにより、ユーザーがそのサイトや他のサイトにアクセスした際の情報に基づいて広告を配信することを、Googleの広告設定ページからオプトアウトできます。" },
+    { title:"免責事項", body:"当サイトに掲載している計算結果・情報の正確性には万全を期しておりますが、その内容を保証するものではありません。当サイトの情報を利用して生じた損害について、一切の責任を負いかねます。また、パチンコは独立試行のため、当サイトの計算結果は将来の当選を保証するものではありません。パチンコ・パチスロは適度に楽しみ、のめり込まないようご注意ください。" },
+    { title:"著作権について", body:"当サイトに掲載されているコンテンツ（テキスト・デザイン・プログラム等）の著作権は当サイト管理者に帰属します。無断転載・複製はご遠慮ください。" },
+    { title:"プライバシーポリシーの変更", body:"当サイトは、必要に応じて本プライバシーポリシーを変更することがあります。変更後のプライバシーポリシーは当ページに掲示された時点より効力を生じるものとします。" },
   ];
 
   return (
     <div style={{ maxWidth:480, margin:"0 auto", padding:"20px 20px 0" }}>
       <div style={{ marginBottom:20 }}>
-        <h1 style={{ fontSize:20, fontWeight:900, margin:"0 0 8px", color:"#fff" }}>
-          プライバシーポリシー
-        </h1>
-        <p style={{ color:"#ffffff44", fontSize:12, margin:0 }}>
-          制定日：{dateStr}
-        </p>
+        <h1 style={{ fontSize:20, fontWeight:900, margin:"0 0 8px", color:"#fff" }}>プライバシーポリシー</h1>
+        <p style={{ color:"#ffffff44", fontSize:12, margin:0 }}>制定日：{dateStr}</p>
       </div>
-
       {sections.map(({ title, body }) => (
-        <div key={title} style={{
-          background:"#0f0f22",
-          border:"1px solid #ffffff0f",
-          borderRadius:16,
-          padding:20,
-          marginBottom:12,
-        }}>
-          <h2 style={{ fontSize:14, fontWeight:700, color:"#ffffff99", margin:"0 0 10px", letterSpacing:0.5 }}>
-            {title}
-          </h2>
-          <p style={{ fontSize:13, color:"#ffffff55", lineHeight:1.8, margin:0 }}>
-            {body}
-          </p>
+        <div key={title} style={{ background:"#0f0f22", border:"1px solid #ffffff0f", borderRadius:16, padding:20, marginBottom:12 }}>
+          <h2 style={{ fontSize:14, fontWeight:700, color:"#ffffff99", margin:"0 0 10px" }}>{title}</h2>
+          <p style={{ fontSize:13, color:"#ffffff55", lineHeight:1.8, margin:0 }}>{body}</p>
         </div>
       ))}
-
-      {/* 依存症相談 */}
-      <div style={{
-        background:"#ff444409",
-        border:"1px solid #ff444422",
-        borderRadius:16,
-        padding:20,
-        marginBottom:12,
-      }}>
-        <h2 style={{ fontSize:14, fontWeight:700, color:"#ff6666aa", margin:"0 0 10px" }}>
-          ギャンブル依存症でお悩みの方へ
-        </h2>
-        <p style={{ fontSize:13, color:"#ffffff44", lineHeight:1.8, margin:"0 0 10px" }}>
-          ギャンブル等依存症に関するご相談は、以下の公的機関をご利用ください。
-        </p>
+      <div style={{ background:"#ff444409", border:"1px solid #ff444422", borderRadius:16, padding:20, marginBottom:12 }}>
+        <h2 style={{ fontSize:14, fontWeight:700, color:"#ff6666aa", margin:"0 0 10px" }}>ギャンブル依存症でお悩みの方へ</h2>
+        <p style={{ fontSize:13, color:"#ffffff44", lineHeight:1.8, margin:"0 0 10px" }}>ギャンブル等依存症に関するご相談は、以下の公的機関をご利用ください。</p>
         <div style={{ fontSize:13, color:"#ff6666aa", lineHeight:2 }}>
           <div>・ギャンブル等依存症相談窓口（各都道府県）</div>
           <div>・GA（ギャンブラーズ・アノニマス）日本</div>
           <div>・依存症対策全国センター</div>
         </div>
       </div>
-
       <div style={{ textAlign:"center", padding:"20px 0 40px" }}>
         <button onClick={()=>setPage("calc")} style={{
           display:"inline-block", background:"linear-gradient(135deg,#ff4444,#ff8800)",
           color:"#fff", fontWeight:700, fontSize:15, padding:"14px 40px", borderRadius:14,
           border:"none", cursor:"pointer", boxShadow:"0 4px 20px #ff444444",
-        }}>
-          🎰 計算ツールを使う
-        </button>
+        }}>🎰 計算ツールを使う</button>
       </div>
     </div>
   );
@@ -510,34 +539,19 @@ function Card({ tag, tagColor, title, children }) {
   );
 }
 
-// ── フッター ────────────────────────────────────
 function Footer({ setPage }) {
   return (
-    <div style={{
-      borderTop:"1px solid #ffffff08",
-      padding:"20px",
-      textAlign:"center",
-      marginTop:20,
-    }}>
-      <button
-        onClick={() => setPage("privacy")}
-        style={{
-          background:"none", border:"none",
-          color:"#ffffff33", fontSize:11,
-          cursor:"pointer", textDecoration:"underline",
-          fontFamily:"'Noto Sans JP',sans-serif",
-        }}
-      >
-        プライバシーポリシー
-      </button>
+    <div style={{ borderTop:"1px solid #ffffff08", padding:"20px", textAlign:"center", marginTop:20 }}>
+      <button onClick={() => setPage("privacy")} style={{
+        background:"none", border:"none", color:"#ffffff33", fontSize:11,
+        cursor:"pointer", textDecoration:"underline", fontFamily:"'Noto Sans JP',sans-serif",
+      }}>プライバシーポリシー</button>
     </div>
   );
 }
 
-// ── メインApp ───────────────────────────────────
 export default function App() {
   const [page, setPage] = useState("calc");
-
   return (
     <div style={{ minHeight:"100vh", background:"#07070f", color:"#e8e8f0", fontFamily:"'Noto Sans JP',sans-serif", paddingBottom:60 }}>
       <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Dots&display=swap" rel="stylesheet"/>
