@@ -33,7 +33,7 @@ function Header({ page, setPage }) {
       justifyContent: "space-between",
       position: "sticky", top: 0, zIndex: 100,
     }}>
-      <div>
+      <div style={{ cursor: "pointer" }} onClick={() => setPage("calc")}>
         <div style={{ fontFamily:"'Zen Dots',monospace", fontSize:16, letterSpacing:3, color:"#fff", textShadow:"0 0 20px #ff444488" }}>
           🎰 PACHINKO CALC
         </div>
@@ -403,6 +403,100 @@ function GuidePage({ setPage }) {
   );
 }
 
+// ── プライバシーポリシーページ ──────────────────
+function PrivacyPage({ setPage }) {
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日`;
+
+  const sections = [
+    {
+      title: "個人情報の収集について",
+      body: "当サイト（PACHINKO CALC）は、ユーザーが直接入力した情報（確率・回転数・予算）をサーバーに送信・保存することはありません。すべての計算はお使いのブラウザ上でのみ行われます。",
+    },
+    {
+      title: "アクセス解析ツールについて",
+      body: "当サイトでは、Googleによるアクセス解析ツール「Googleアナリティクス」を使用する場合があります。このGoogleアナリティクスはデータ収集のためにCookieを使用しています。このデータは匿名で収集されており、個人を特定するものではありません。この機能はCookieを無効にすることで収集を拒否できます。詳しくはGoogleのプライバシーポリシーをご確認ください。",
+    },
+    {
+      title: "広告について",
+      body: "当サイトは、第三者配信の広告サービス（Google AdSense）を利用する場合があります。広告配信事業者はCookieを使用して、ユーザーが過去にアクセスしたサイトの情報に基づいて広告を配信することがあります。GoogleがCookieを使用することにより、ユーザーがそのサイトや他のサイトにアクセスした際の情報に基づいて広告を配信することを、Googleの広告設定ページからオプトアウトできます。",
+    },
+    {
+      title: "免責事項",
+      body: "当サイトに掲載している計算結果・情報の正確性には万全を期しておりますが、その内容を保証するものではありません。当サイトの情報を利用して生じた損害について、一切の責任を負いかねます。また、パチンコは独立試行のため、当サイトの計算結果は将来の当選を保証するものではありません。パチンコ・パチスロは適度に楽しみ、のめり込まないようご注意ください。",
+    },
+    {
+      title: "著作権について",
+      body: "当サイトに掲載されているコンテンツ（テキスト・デザイン・プログラム等）の著作権は当サイト管理者に帰属します。無断転載・複製はご遠慮ください。",
+    },
+    {
+      title: "プライバシーポリシーの変更",
+      body: "当サイトは、必要に応じて本プライバシーポリシーを変更することがあります。変更後のプライバシーポリシーは当ページに掲示された時点より効力を生じるものとします。",
+    },
+  ];
+
+  return (
+    <div style={{ maxWidth:480, margin:"0 auto", padding:"20px 20px 0" }}>
+      <div style={{ marginBottom:20 }}>
+        <h1 style={{ fontSize:20, fontWeight:900, margin:"0 0 8px", color:"#fff" }}>
+          プライバシーポリシー
+        </h1>
+        <p style={{ color:"#ffffff44", fontSize:12, margin:0 }}>
+          制定日：{dateStr}
+        </p>
+      </div>
+
+      {sections.map(({ title, body }) => (
+        <div key={title} style={{
+          background:"#0f0f22",
+          border:"1px solid #ffffff0f",
+          borderRadius:16,
+          padding:20,
+          marginBottom:12,
+        }}>
+          <h2 style={{ fontSize:14, fontWeight:700, color:"#ffffff99", margin:"0 0 10px", letterSpacing:0.5 }}>
+            {title}
+          </h2>
+          <p style={{ fontSize:13, color:"#ffffff55", lineHeight:1.8, margin:0 }}>
+            {body}
+          </p>
+        </div>
+      ))}
+
+      {/* 依存症相談 */}
+      <div style={{
+        background:"#ff444409",
+        border:"1px solid #ff444422",
+        borderRadius:16,
+        padding:20,
+        marginBottom:12,
+      }}>
+        <h2 style={{ fontSize:14, fontWeight:700, color:"#ff6666aa", margin:"0 0 10px" }}>
+          ギャンブル依存症でお悩みの方へ
+        </h2>
+        <p style={{ fontSize:13, color:"#ffffff44", lineHeight:1.8, margin:"0 0 10px" }}>
+          ギャンブル等依存症に関するご相談は、以下の公的機関をご利用ください。
+        </p>
+        <div style={{ fontSize:13, color:"#ff6666aa", lineHeight:2 }}>
+          <div>・ギャンブル等依存症相談窓口（各都道府県）</div>
+          <div>・GA（ギャンブラーズ・アノニマス）日本</div>
+          <div>・依存症対策全国センター</div>
+        </div>
+      </div>
+
+      <div style={{ textAlign:"center", padding:"20px 0 40px" }}>
+        <button onClick={()=>setPage("calc")} style={{
+          display:"inline-block", background:"linear-gradient(135deg,#ff4444,#ff8800)",
+          color:"#fff", fontWeight:700, fontSize:15, padding:"14px 40px", borderRadius:14,
+          border:"none", cursor:"pointer", boxShadow:"0 4px 20px #ff444444",
+        }}>
+          🎰 計算ツールを使う
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function Card({ tag, tagColor, title, children }) {
   return (
     <div style={{ background:"#0f0f22", border:"1px solid #ffffff0f", borderRadius:16, padding:20, marginBottom:14 }}>
@@ -416,6 +510,30 @@ function Card({ tag, tagColor, title, children }) {
   );
 }
 
+// ── フッター ────────────────────────────────────
+function Footer({ setPage }) {
+  return (
+    <div style={{
+      borderTop:"1px solid #ffffff08",
+      padding:"20px",
+      textAlign:"center",
+      marginTop:20,
+    }}>
+      <button
+        onClick={() => setPage("privacy")}
+        style={{
+          background:"none", border:"none",
+          color:"#ffffff33", fontSize:11,
+          cursor:"pointer", textDecoration:"underline",
+          fontFamily:"'Noto Sans JP',sans-serif",
+        }}
+      >
+        プライバシーポリシー
+      </button>
+    </div>
+  );
+}
+
 // ── メインApp ───────────────────────────────────
 export default function App() {
   const [page, setPage] = useState("calc");
@@ -425,7 +543,10 @@ export default function App() {
       <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Dots&display=swap" rel="stylesheet"/>
       <style>{`input[type=range]{-webkit-appearance:none;appearance:none}*{box-sizing:border-box}`}</style>
       <Header page={page} setPage={setPage}/>
-      {page === "calc" ? <CalcPage setPage={setPage}/> : <GuidePage setPage={setPage}/>}
+      {page === "calc" && <CalcPage setPage={setPage}/>}
+      {page === "guide" && <GuidePage setPage={setPage}/>}
+      {page === "privacy" && <PrivacyPage setPage={setPage}/>}
+      <Footer setPage={setPage}/>
     </div>
   );
 }
