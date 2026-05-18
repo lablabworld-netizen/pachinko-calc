@@ -450,6 +450,27 @@ function GuidePage({ setPage }) {
         <p style={{ color:"#ffffff33", fontSize:11, marginTop:10, marginBottom:0 }}>※ 1/399・予算5万円の場合で計算</p>
       </Card>
 
+      <Card tag="上位当たり" tagColor="#ff4444" title="RUSH突入率とは">
+        <p style={{ color:"#ffffff77", fontSize:13, lineHeight:1.8, margin:"0 0 10px" }}>
+          パチンコは「当たり」の中にランクがあります。当たっても外れ扱いになる「通常当たり」と、RUSHに突入する「上位当たり」です。
+        </p>
+        {[
+          { label:"RUSH突入率の確認方法", desc:"台のスペック表（液晶横の説明板や公式サイト）に「RUSH突入率〇〇%」と記載されています。「データロボサイトセブン」などのアプリでも確認できます。", color:"#ff4444" },
+          { label:"設定の使い方", desc:"計算ツールの「RUSH突入率を設定する」ボタンを開いて、台のRUSH突入率を入力してください。初当たり確率とRUSH到達確率の2つが同時に表示されます。", color:"#ff8800" },
+        ].map((item) => (
+          <div key={item.label} style={{ display:"flex", gap:12, marginBottom:14 }}>
+            <div style={{ width:4, borderRadius:99, background:item.color, flexShrink:0, boxShadow:`0 0 8px ${item.color}` }}/>
+            <div>
+              <div style={{ fontSize:13, fontWeight:700, color:item.color, marginBottom:4 }}>{item.label}</div>
+              <div style={{ fontSize:12, color:"#ffffff66", lineHeight:1.7 }}>{item.desc}</div>
+            </div>
+          </div>
+        ))}
+        <div style={{ background:"#ff444411", border:"1px solid #ff444422", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#ff4444aa", lineHeight:1.7 }}>
+          💡 例：1/399でRUSH突入率60%の台なら、「当たる確率×60%」がRUSHまで到達する確率です。
+        </div>
+      </Card>
+
       <Card tag="注意" tagColor="#ff4444" title="このツールでできないこと">
         {["次の回転が当たるかどうかの予測","ハマり台が「そろそろ当たる」の保証","収支をプラスにする方法の提供"].map(text=>(
           <div key={text} style={{ display:"flex", gap:8, alignItems:"flex-start", marginBottom:8 }}>
