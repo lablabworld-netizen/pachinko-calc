@@ -197,7 +197,7 @@ function CalcPage({ setPage }) {
 
   const spins = Math.floor((budget/1000)*spinsPer1000);
   const prob = calcHitProb(spins, rate);
-  const rushProb = prob * (rushEntryRate / 100);
+  const rushProb = 1 - Math.pow(1 - (rushEntryRate / 100) / rate, spins);
 
   return (
     <div style={{ maxWidth:480, margin:"0 auto", padding:"0 20px" }}>
@@ -247,7 +247,7 @@ function CalcPage({ setPage }) {
         cursor:"pointer", fontFamily:"'Noto Sans JP',sans-serif",
         transition:"all 0.2s",
       }}>
-        {showOption ? "▲ RUSH突入率設定を閉じる" : "⚙️ RUSH突入率を設定する（上位当たり）"}
+        {showOption ? "▲ RUSH突入率設定を閉じる" : <span className="rainbow-btn">⚙️ RUSH突入率を設定する（上位当たり）</span>}
       </button>
 
       {/* オプション：RUSH突入率設定 */}
@@ -457,6 +457,7 @@ function GuidePage({ setPage }) {
         {[
           { label:"RUSH突入率の確認方法", desc:"台のスペック表（液晶横の説明板や公式サイト）に「RUSH突入率〇〇%」と記載されています。「データロボサイトセブン」などのアプリでも確認できます。", color:"#ff4444" },
           { label:"設定の使い方", desc:"計算ツールの「RUSH突入率を設定する」ボタンを開いて、台のRUSH突入率を入力してください。初当たり確率とRUSH到達確率の2つが同時に表示されます。", color:"#ff8800" },
+          { label:"計算の仕組み", desc:"1回転ごとに「この回転でRUSHに入る確率 = 1÷確率分母 × RUSH突入率」として計算しています。複数回当たる可能性も考慮した正確な確率です。", color:"#ffcc00" },
         ].map((item) => (
           <div key={item.label} style={{ display:"flex", gap:12, marginBottom:14 }}>
             <div style={{ width:4, borderRadius:99, background:item.color, flexShrink:0, boxShadow:`0 0 8px ${item.color}` }}/>
@@ -467,7 +468,7 @@ function GuidePage({ setPage }) {
           </div>
         ))}
         <div style={{ background:"#ff444411", border:"1px solid #ff444422", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#ff4444aa", lineHeight:1.7 }}>
-          💡 例：1/399でRUSH突入率60%の台なら、「当たる確率×60%」がRUSHまで到達する確率です。
+          💡 例：1/399でRUSH突入率60%の台なら、予算内で複数回当たる可能性も含めてRUSH到達確率を計算します。
         </div>
       </Card>
 
@@ -576,7 +577,7 @@ export default function App() {
   return (
     <div style={{ minHeight:"100vh", background:"#07070f", color:"#e8e8f0", fontFamily:"'Noto Sans JP',sans-serif", paddingBottom:60 }}>
       <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Dots&display=swap" rel="stylesheet"/>
-      <style>{`input[type=range]{-webkit-appearance:none;appearance:none}*{box-sizing:border-box}`}</style>
+      <style>{`input[type=range]{-webkit-appearance:none;appearance:none}*{box-sizing:border-box}@keyframes rainbow{0%{color:#ff4444}14%{color:#ff8800}28%{color:#ffcc00}42%{color:#44ddaa}57%{color:#44aaff}71%{color:#aa44ff}85%{color:#ff44aa}100%{color:#ff4444}}.rainbow-btn{animation:rainbow 3s linear infinite}`}</style>
       <Header page={page} setPage={setPage}/>
       {page === "calc" && <CalcPage setPage={setPage}/>}
       {page === "guide" && <GuidePage setPage={setPage}/>}
