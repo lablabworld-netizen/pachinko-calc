@@ -201,6 +201,14 @@ function CalcPage({ setPage }) {
 
   return (
     <div style={{ maxWidth:480, margin:"0 auto", padding:"0 20px" }}>
+      {/* 広告 */}
+      <div style={{ textAlign:"center", margin:"16px 0 0" }}>
+        <a href="https://px.a8.net/svt/ejp?a8mat=4B3U71+GHL8G2+2SY6+BXQOH" rel="nofollow">
+          <img border="0" width="234" height="60" alt="" src="https://www21.a8.net/svt/bgt?aid=260519581997&wid=003&eno=01&mid=s00000013083002005000&mc=1"/>
+        </a>
+        <img border="0" width="1" height="1" src="https://www13.a8.net/0.gif?a8mat=4B3U71+GHL8G2+2SY6+BXQOH" alt=""/>
+      </div>
+
       {/* Gauge */}
       <div style={{
         margin:"20px 0 0", background:"linear-gradient(135deg,#0f0f22,#12121e)",
@@ -228,14 +236,6 @@ function CalcPage({ setPage }) {
             </div>
           </>
         )}
-      </div>
-
-      {/* 広告 */}
-      <div style={{ textAlign:"center", margin:"8px 0" }}>
-        <a href="https://px.a8.net/svt/ejp?a8mat=4B3U71+GHL8G2+2SY6+BXQOH" rel="nofollow">
-          <img border="0" width="234" height="60" alt="" src="https://www21.a8.net/svt/bgt?aid=260519581997&wid=003&eno=01&mid=s00000013083002005000&mc=1"/>
-        </a>
-        <img border="0" width="1" height="1" src="https://www13.a8.net/0.gif?a8mat=4B3U71+GHL8G2+2SY6+BXQOH" alt=""/>
       </div>
 
       {/* オプション展開ボタン */}
