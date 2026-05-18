@@ -241,9 +241,9 @@ function CalcPage({ setPage }) {
       {/* オプション展開ボタン */}
       <button onClick={() => setShowOption(v => !v)} style={{
         width:"100%", marginTop:8, padding:"9px 0", borderRadius:12, fontSize:12,
-        background: showOption ? "#ff444411" : "#ffffff08",
-        border: showOption ? "1px solid #ff444433" : "1px solid #ffffff11",
-        color: showOption ? "#ff8888aa" : "#ffffff33",
+        background: showOption ? "#ff444411" : "#ffffff0f",
+        border: showOption ? "1px solid #ff444433" : "1px solid #ffffff22",
+        color: showOption ? "#ff8888cc" : "#ffffff66",
         cursor:"pointer", fontFamily:"'Noto Sans JP',sans-serif",
         transition:"all 0.2s",
       }}>
