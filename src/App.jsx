@@ -332,12 +332,12 @@ function CalcPage({ setPage }) {
 
       <div style={{ marginTop:12, textAlign:"center" }}>
         <button onClick={()=>setPage("guide")} style={{
-          background:"none", border:"none", color:"#ffffff33", fontSize:12,
+          background:"none", border:"none", color:"#ffffff55", fontSize:12,
           cursor:"pointer", textDecoration:"underline", padding:"8px 0",
         }}>使い方・確率の説明を読む</button>
       </div>
 
-      <div style={{ marginTop:8, fontSize:10, color:"#ffffff22", textAlign:"center", lineHeight:1.8, paddingBottom:40 }}>
+      <div style={{ marginTop:8, fontSize:10, color:"#ffffff44", textAlign:"center", lineHeight:1.8, paddingBottom:40 }}>
         ※ 確率は独立試行のため、過去の回転数は結果に影響しません。<br/>
         このツールは期待値の理解を目的としています。
       </div>
@@ -586,13 +586,155 @@ function Card({ tag, tagColor, title, children }) {
   );
 }
 
+// ── 用語集ページ ────────────────────────────────
+function GlossaryPage({ setPage }) {
+  const terms = [
+    { term:"大当り確率", reading:"おおあたりかくりつ", color:"#44aaff", desc:"1回転ごとに行われる抽選で当たりが出る確率。「1/399」なら1回転で399分の1の確率で当たる。分母が小さいほど当たりやすい。" },
+    { term:"ST（スペシャルタイム）", reading:"エスティー", color:"#ff4444", desc:"通常より確率が上がった状態のこと。ST中は大当り確率が高くなり、連チャンしやすくなる。「ST100回転」なら100回転の間、高確率が続く。" },
+    { term:"RUSH（ラッシュ）", reading:"ラッシュ", color:"#ff8800", desc:"STと同じく高確率状態のこと。最近の台ではSTよりRUSHと呼ぶことが多い。RUSHに入ると連チャンが期待できる。" },
+    { term:"LT（ラッキートリガー）", reading:"エルティー", color:"#ff44aa", desc:"比較的新しい仕様で、通常時でもRUSHに突入できる仕組み。特定の条件を満たすとLTが発動してRUSHに入れることがある。" },
+    { term:"確変（確率変動）", reading:"かくへん", color:"#ffcc00", desc:"大当り後に確率が変動してSTやRUSHに入る仕組み。「確変突入率60%」なら当たりの60%が上位当たりでRUSHに入れる。" },
+    { term:"ボーダー", reading:"ボーダー", color:"#44ddaa", desc:"損益分岐点となる1000円あたりの回転数のこと。ボーダー以上回れば期待値プラス、以下なら期待値マイナスの台と判断できる。" },
+    { term:"回転数", reading:"かいてんすう", color:"#44ddaa", desc:"1000円あたりに何回転するかを表す数字。釘の調整で変わる。4円パチは平均18〜22回転、1円パチは50〜100回転が目安。" },
+    { term:"ハマり", reading:"ハマり", color:"#ff5500", desc:"確率の分母を大きく超えても当たらない状態のこと。1/399の台で800回転以上当たらない場合など。ただし確率は独立試行なので「そろそろ当たる」は数学的に正しくない。" },
+    { term:"釘（くぎ）", reading:"くぎ", color:"#ffffff88", desc:"盤面にある金属の釘のこと。釘の調整次第で回転数が変わる。釘が開いている＝回転数が多い＝有利な台。" },
+    { term:"等倍（とうばい）", reading:"とうばい", color:"#ffcc00", desc:"確率通りに1回当たるのに必要な金額を使った状態。63%の当選確率に相当する。等倍以上回せている台は比較的釘が良い。" },
+    { term:"4円パチ（よえんぱち）", reading:"よえんぱち", color:"#44aaff", desc:"1玉4円で遊ぶ通常のパチンコ。射幸性が高く、大きく勝つこともあるが負けも大きい。" },
+    { term:"1円パチ（いちえんぱち）", reading:"いちえんぱち", color:"#44ddaa", desc:"1玉1円で遊ぶパチンコ。4円パチより安く長く遊べるが、出玉の価値も4分の1になる。" },
+  ];
+
+  return (
+    <div style={{ maxWidth:480, margin:"0 auto", padding:"20px 20px 0" }}>
+      <div style={{ marginBottom:20 }}>
+        <h1 style={{ fontSize:20, fontWeight:900, margin:"0 0 8px", color:"#fff" }}>パチンコ用語集</h1>
+        <p style={{ color:"#ffffff88", fontSize:14, lineHeight:1.8, margin:0 }}>
+          パチンコでよく使われる用語をわかりやすく解説します。
+        </p>
+      </div>
+
+      {terms.map(({ term, reading, color, desc }) => (
+        <div key={term} style={{ background:"#0f0f22", border:"1px solid #ffffff0f", borderRadius:16, padding:"16px 20px", marginBottom:10 }}>
+          <div style={{ display:"flex", alignItems:"baseline", gap:8, marginBottom:8 }}>
+            <span style={{ fontSize:16, fontWeight:900, color }}>{term}</span>
+            <span style={{ fontSize:11, color:"#ffffff33" }}>（{reading}）</span>
+          </div>
+          <p style={{ fontSize:13, color:"#ffffff66", lineHeight:1.8, margin:0 }}>{desc}</p>
+        </div>
+      ))}
+
+      <div style={{ textAlign:"center", padding:"20px 0 40px" }}>
+        <button onClick={()=>setPage("calc")} style={{
+          display:"inline-block", background:"linear-gradient(135deg,#ff4444,#ff8800)",
+          color:"#fff", fontWeight:700, fontSize:15, padding:"14px 40px", borderRadius:14,
+          border:"none", cursor:"pointer", boxShadow:"0 4px 20px #ff444444",
+        }}>🎰 計算ツールを使う</button>
+      </div>
+    </div>
+  );
+}
+
+// ── スペック解説ページ ──────────────────────────
+function SpecPage({ setPage }) {
+  const specs = [
+    {
+      name:"ライトミドル", color:"#44aaff",
+      rate:"1/199〜1/250", rush:"60〜80%", st:"100回転前後",
+      desc:"初心者から中級者向けの人気スペック。当たりやすくRUSH突入率も高め。バランスがよく長く遊びやすい。",
+    },
+    {
+      name:"ミドル", color:"#ffcc00",
+      rate:"1/319〜1/399", rush:"60〜80%", st:"100回転前後",
+      desc:"パチンコの標準スペック。当たりにくいが出玉が大きい。ある程度の資金が必要で上級者向け。",
+    },
+    {
+      name:"ハイミドル", color:"#ff8800",
+      rate:"1/350〜1/450", rush:"70〜100%", st:"100〜150回転",
+      desc:"ミドルより当たりにくいが出玉が多め。RUSHに入ると大量出玉が期待できるロマン仕様。",
+    },
+    {
+      name:"甘デジ（ライト）", color:"#44ddaa",
+      rate:"1/99〜1/150", rush:"50〜65%", st:"50〜100回転",
+      desc:"当たりやすく少ない予算でも楽しめる。出玉は少なめだが回転率が高く長時間遊べる。1パチと相性がいい。",
+    },
+    {
+      name:"MAX（マックス）", color:"#ff4444",
+      rate:"1/500以上", rush:"80〜100%", st:"100回転以上",
+      desc:"最も当たりにくいスペック。一発逆転を狙うロマン台。資金に余裕がある上級者向け。",
+    },
+  ];
+
+  return (
+    <div style={{ maxWidth:480, margin:"0 auto", padding:"20px 20px 0" }}>
+      <div style={{ marginBottom:20 }}>
+        <h1 style={{ fontSize:20, fontWeight:900, margin:"0 0 8px", color:"#fff" }}>パチンコスペック解説</h1>
+        <p style={{ color:"#ffffff88", fontSize:14, lineHeight:1.8, margin:0 }}>
+          台のスペックの種類と特徴をまとめました。自分のスタイルに合った台選びの参考にしてください。
+        </p>
+      </div>
+
+      {specs.map(({ name, color, rate, rush, st, desc }) => (
+        <div key={name} style={{ background:"#0f0f22", border:`1px solid ${color}22`, borderRadius:16, padding:"16px 20px", marginBottom:12 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+            <div style={{ width:4, borderRadius:99, alignSelf:"stretch", background:color, boxShadow:`0 0 8px ${color}` }}/>
+            <h2 style={{ fontSize:16, fontWeight:900, color, margin:0 }}>{name}</h2>
+          </div>
+          <div style={{ display:"flex", gap:8, marginBottom:12, flexWrap:"wrap" }}>
+            {[
+              { label:"大当り確率", value:rate },
+              { label:"RUSH突入率", value:rush },
+              { label:"ST回転数", value:st },
+            ].map(({ label, value }) => (
+              <div key={label} style={{ background:color+"11", border:`1px solid ${color}22`, borderRadius:8, padding:"6px 10px" }}>
+                <div style={{ fontSize:10, color:color+"88", marginBottom:2 }}>{label}</div>
+                <div style={{ fontSize:13, fontWeight:700, color, fontFamily:"'Zen Dots',monospace" }}>{value}</div>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize:13, color:"#ffffff66", lineHeight:1.8, margin:0 }}>{desc}</p>
+        </div>
+      ))}
+
+      <div style={{ background:"#ffffff08", border:"1px solid #ffffff11", borderRadius:16, padding:"16px 20px", marginBottom:14 }}>
+        <div style={{ fontSize:13, fontWeight:700, color:"#ffffff88", marginBottom:10 }}>💡 台選びのポイント</div>
+        {[
+          "予算が少ない → 甘デジ・ライトミドル",
+          "バランスよく遊びたい → ライトミドル・ミドル",
+          "一発逆転を狙いたい → ハイミドル・MAX",
+          "1パチで遊ぶ → 甘デジが特におすすめ",
+        ].map(text => (
+          <div key={text} style={{ display:"flex", gap:8, marginBottom:6, fontSize:13, color:"#ffffff55" }}>
+            <span style={{ color:"#44ddaa", flexShrink:0 }}>✓</span>
+            <span>{text}</span>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ textAlign:"center", padding:"20px 0 40px" }}>
+        <button onClick={()=>setPage("calc")} style={{
+          display:"inline-block", background:"linear-gradient(135deg,#ff4444,#ff8800)",
+          color:"#fff", fontWeight:700, fontSize:15, padding:"14px 40px", borderRadius:14,
+          border:"none", cursor:"pointer", boxShadow:"0 4px 20px #ff444444",
+        }}>🎰 計算ツールを使う</button>
+      </div>
+    </div>
+  );
+}
+
 function Footer({ setPage }) {
   return (
-    <div style={{ borderTop:"1px solid #ffffff08", padding:"20px", textAlign:"center", marginTop:20 }}>
-      <button onClick={() => setPage("privacy")} style={{
-        background:"none", border:"none", color:"#ffffff33", fontSize:11,
-        cursor:"pointer", textDecoration:"underline", fontFamily:"'Noto Sans JP',sans-serif",
-      }}>プライバシーポリシー</button>
+    <div style={{ borderTop:"1px solid #ffffff08", padding:"16px 20px", marginTop:20 }}>
+      <div style={{ display:"flex", justifyContent:"center", gap:20, flexWrap:"wrap" }}>
+        {[
+          { label:"用語集", page:"glossary" },
+          { label:"スペック解説", page:"spec" },
+          { label:"プライバシーポリシー", page:"privacy" },
+        ].map(({ label, page }) => (
+          <button key={page} onClick={() => setPage(page)} style={{
+            background:"none", border:"none", color:"#ffffff55", fontSize:11,
+            cursor:"pointer", textDecoration:"underline", fontFamily:"'Noto Sans JP',sans-serif",
+          }}>{label}</button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -606,6 +748,8 @@ export default function App() {
       <Header page={page} setPage={setPage}/>
       {page === "calc" && <CalcPage setPage={setPage}/>}
       {page === "guide" && <GuidePage setPage={setPage}/>}
+      {page === "glossary" && <GlossaryPage setPage={setPage}/>}
+      {page === "spec" && <SpecPage setPage={setPage}/>}
       {page === "privacy" && <PrivacyPage setPage={setPage}/>}
       <Footer setPage={setPage}/>
     </div>
