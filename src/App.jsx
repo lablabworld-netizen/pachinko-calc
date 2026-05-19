@@ -259,7 +259,7 @@ function CalcPage({ setPage }) {
       <div style={{ margin:"10px 0", background:"#0f0f22", border:"1px solid #ffffff0f", borderRadius:20, padding:"20px" }}>
         <Slider label="大当り確率の分母" value={rate} min={99} max={799} step={1}
           onChange={setRate} unit="分の1" color="#44aaff" showStepper/>
-        <Slider label="1000円あたりの回転数" value={spinsPer1000} min={10} max={40} step={1}
+        <Slider label="1000円あたりの回転数" value={spinsPer1000} min={10} max={200} step={1}
           onChange={setSpinsPer1000} unit="回転" color="#44ddaa" showStepper/>
         <Slider label="予算" value={budget} min={500} max={50000} step={500}
           onChange={setBudget} unit="円" color="#ff8800" showStepper/>
