@@ -197,18 +197,10 @@ function CalcPage({ setPage }) {
 
   const spins = Math.floor((budget/1000)*spinsPer1000);
   const prob = calcHitProb(spins, rate);
-  const rushProb = 1 - Math.pow(1 - (rushEntryRate / 100) / rate, spins);
+  const rushProb = prob * (rushEntryRate / 100);
 
   return (
     <div style={{ maxWidth:480, margin:"0 auto", padding:"0 20px" }}>
-      {/* 広告 */}
-      <div style={{ textAlign:"center", margin:"16px 0 0" }}>
-        <a href="https://px.a8.net/svt/ejp?a8mat=4B3U71+GHL8G2+2SY6+BXQOH" rel="nofollow">
-          <img border="0" width="234" height="60" alt="" src="https://www21.a8.net/svt/bgt?aid=260519581997&wid=003&eno=01&mid=s00000013083002005000&mc=1"/>
-        </a>
-        <img border="0" width="1" height="1" src="https://www13.a8.net/0.gif?a8mat=4B3U71+GHL8G2+2SY6+BXQOH" alt=""/>
-      </div>
-
       {/* Gauge */}
       <div style={{
         margin:"20px 0 0", background:"linear-gradient(135deg,#0f0f22,#12121e)",
@@ -241,13 +233,13 @@ function CalcPage({ setPage }) {
       {/* オプション展開ボタン */}
       <button onClick={() => setShowOption(v => !v)} style={{
         width:"100%", marginTop:8, padding:"9px 0", borderRadius:12, fontSize:12,
-        background: showOption ? "#ff444411" : "#ffffff0f",
-        border: showOption ? "1px solid #ff444433" : "1px solid #ffffff22",
-        color: showOption ? "#ff8888cc" : "#ffffff66",
+        background: showOption ? "#ff444411" : "#ffffff08",
+        border: showOption ? "1px solid #ff444433" : "1px solid #ffffff11",
+        color: showOption ? "#ff8888aa" : "#ffffff33",
         cursor:"pointer", fontFamily:"'Noto Sans JP',sans-serif",
         transition:"all 0.2s",
       }}>
-        {showOption ? "▲ RUSH突入率設定を閉じる" : <span className="rainbow-btn">⚙️ RUSH突入率を設定する（上位当たり）</span>}
+        {showOption ? "▲ RUSH突入率設定を閉じる" : "⚙️ RUSH突入率を設定する（上位当たり）"}
       </button>
 
       {/* オプション：RUSH突入率設定 */}
@@ -450,28 +442,6 @@ function GuidePage({ setPage }) {
         <p style={{ color:"#ffffff33", fontSize:11, marginTop:10, marginBottom:0 }}>※ 1/399・予算5万円の場合で計算</p>
       </Card>
 
-      <Card tag="上位当たり" tagColor="#ff4444" title="RUSH突入率とは">
-        <p style={{ color:"#ffffff77", fontSize:13, lineHeight:1.8, margin:"0 0 10px" }}>
-          パチンコは「当たり」の中にランクがあります。当たっても外れ扱いになる「通常当たり」と、RUSHに突入する「上位当たり」です。
-        </p>
-        {[
-          { label:"RUSH突入率の確認方法", desc:"台のスペック表（液晶横の説明板や公式サイト）に「RUSH突入率〇〇%」と記載されています。「データロボサイトセブン」などのアプリでも確認できます。", color:"#ff4444" },
-          { label:"設定の使い方", desc:"計算ツールの「RUSH突入率を設定する」ボタンを開いて、台のRUSH突入率を入力してください。初当たり確率とRUSH到達確率の2つが同時に表示されます。", color:"#ff8800" },
-          { label:"計算の仕組み", desc:"1回転ごとに「この回転でRUSHに入る確率 = 1÷確率分母 × RUSH突入率」として計算しています。複数回当たる可能性も考慮した正確な確率です。", color:"#ffcc00" },
-        ].map((item) => (
-          <div key={item.label} style={{ display:"flex", gap:12, marginBottom:14 }}>
-            <div style={{ width:4, borderRadius:99, background:item.color, flexShrink:0, boxShadow:`0 0 8px ${item.color}` }}/>
-            <div>
-              <div style={{ fontSize:13, fontWeight:700, color:item.color, marginBottom:4 }}>{item.label}</div>
-              <div style={{ fontSize:12, color:"#ffffff66", lineHeight:1.7 }}>{item.desc}</div>
-            </div>
-          </div>
-        ))}
-        <div style={{ background:"#ff444411", border:"1px solid #ff444422", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#ff4444aa", lineHeight:1.7 }}>
-          💡 例：1/399でRUSH突入率60%の台なら、予算内で複数回当たる可能性も含めてRUSH到達確率を計算します。
-        </div>
-      </Card>
-
       <Card tag="注意" tagColor="#ff4444" title="このツールでできないこと">
         {["次の回転が当たるかどうかの予測","ハマり台が「そろそろ当たる」の保証","収支をプラスにする方法の提供"].map(text=>(
           <div key={text} style={{ display:"flex", gap:8, alignItems:"flex-start", marginBottom:8 }}>
@@ -577,7 +547,7 @@ export default function App() {
   return (
     <div style={{ minHeight:"100vh", background:"#07070f", color:"#e8e8f0", fontFamily:"'Noto Sans JP',sans-serif", paddingBottom:60 }}>
       <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Dots&display=swap" rel="stylesheet"/>
-      <style>{`input[type=range]{-webkit-appearance:none;appearance:none}*{box-sizing:border-box}@keyframes rainbow{0%{color:#ff4444}14%{color:#ff8800}28%{color:#ffcc00}42%{color:#44ddaa}57%{color:#44aaff}71%{color:#aa44ff}85%{color:#ff44aa}100%{color:#ff4444}}.rainbow-btn{animation:rainbow 3s linear infinite}`}</style>
+      <style>{`input[type=range]{-webkit-appearance:none;appearance:none}*{box-sizing:border-box}`}</style>
       <Header page={page} setPage={setPage}/>
       {page === "calc" && <CalcPage setPage={setPage}/>}
       {page === "guide" && <GuidePage setPage={setPage}/>}
